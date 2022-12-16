@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react"
 import Question from "./Question"
+import { InputNumber } from "antd"
 import { data } from "./data"
-import { parseQuestions } from "./QuestionsParser"
-import { shuffleArray } from "../../utils"
+import { parseQuestions } from "../parsers/QuestionsParser"
+import { DB, shuffleArray } from "../../utils"
+import { useBaseDifficulty } from "../hooks"
 
 function Questions({ url, setShowModal, setShowWelcome }) {
   const [ansRevealed, setAnsRevealed] = useState(false)
@@ -10,17 +12,24 @@ function Questions({ url, setShowModal, setShowWelcome }) {
   const [points, setPoints] = useState(0)
   const [scoreText, setScoreText] = useState("")
   const [answeredIndex, setAnsweredIndex] = useState(0)
+  const [baseDifficulty, _] = useBaseDifficulty()
 
   useEffect(() => {
       // fetch(url)
       //   .then((data) => data.json())
       //   .then((jsonData) => setQuestions(jsonData.results))
-      const N = 10
-      let randomQuestions = [...data]
+      const randomQuestions = [...data]
       shuffleArray(randomQuestions)
-      randomQuestions = randomQuestions.filter((_, idx) => idx < N)
-      setQuestions(parseQuestions(randomQuestions))
-  }, [])
+      const N = 10
+      console.log("foo", {baseDifficulty})
+      let hardQuestions = randomQuestions
+        .filter((q, idx) => {
+            const savedResult = DB.get(JSON.stringify(q.question))
+            return savedResult === null || savedResult >= baseDifficulty
+        })
+        .filter((_, idx) => idx < N)
+      setQuestions(parseQuestions(hardQuestions))
+  }, [data, baseDifficulty])
 
   useEffect(() => {
     setScoreText(`You scored ${points}/${questions.length} correct answers`)
@@ -41,6 +50,8 @@ function Questions({ url, setShowModal, setShowWelcome }) {
   }
 
   function handleSubmit() {
+    setAnsRevealed(true)
+    return
     answeredIndex === questions.length && setAnsRevealed(true)
   }
 
@@ -74,6 +85,7 @@ function Questions({ url, setShowModal, setShowWelcome }) {
 
   return (
     <div className="z-10 h-full max-w-6xl flex flex-col justify-center items-start gap-3 p-8 sm:px-16 lg:gap-8 lg:py-16">
+    <BaseDifficultyInput />
       {questions?.length ? (
         <>
           <button
@@ -102,11 +114,11 @@ function Questions({ url, setShowModal, setShowWelcome }) {
               >
                 Play again
               </button>
-            ) : answeredIndex < questions.length ? (
-              <p className="text-md font-karla text-text-blue md:text-xl lg:text-2xl">
-                Select the remaining {questions.length - answeredIndex}{" "}
-                questions
-              </p>
+            // ) : answeredIndex < questions.length ? (
+            //   <p className="text-md font-karla text-text-blue md:text-xl lg:text-2xl">
+            //     Select the remaining {questions.length - answeredIndex}{" "}
+            //     questions
+            //   </p>
             ) : (
               <button
                 className="self-center text-white bg-btn-blue font-inter px-6 py-2 rounded-md shadow-xl cursor-pointer transition-all hover:opacity-80 active:scale-90 focus:opacity-80 md:text-xl md:px-12 md:py-4 md:rounded-lg"
@@ -120,6 +132,25 @@ function Questions({ url, setShowModal, setShowWelcome }) {
       </div>
     </div>
   )
+}
+
+function BaseDifficultyInput() {
+    const [difficulty, onChange] = useBaseDifficulty()
+
+    return (
+        <>
+        {" Độ khó tối thiểu: "}
+        <InputNumber
+            min={0}
+            max={100}
+            step={5}
+            contentEditable={false}
+            value={difficulty}
+            onChange={onChange}
+            onBlur={() => console.log("onBlur")}
+        />
+        </>
+    )
 }
 
 export default Questions
