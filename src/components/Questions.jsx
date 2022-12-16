@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react"
 import Question from "./Question"
+import { data } from "./data"
+import { parseQuestions } from "./QuestionsParser"
+import { shuffleArray } from "../../utils"
 
 function Questions({ url, setShowModal, setShowWelcome }) {
   const [ansRevealed, setAnsRevealed] = useState(false)
@@ -9,9 +12,14 @@ function Questions({ url, setShowModal, setShowWelcome }) {
   const [answeredIndex, setAnsweredIndex] = useState(0)
 
   useEffect(() => {
-    fetch(url)
-      .then((data) => data.json())
-      .then((jsonData) => setQuestions(jsonData.results))
+      // fetch(url)
+      //   .then((data) => data.json())
+      //   .then((jsonData) => setQuestions(jsonData.results))
+      const N = 10
+      let randomQuestions = [...data]
+      shuffleArray(randomQuestions)
+      randomQuestions = randomQuestions.filter((_, idx) => idx < N)
+      setQuestions(parseQuestions(randomQuestions))
   }, [])
 
   useEffect(() => {
@@ -72,7 +80,7 @@ function Questions({ url, setShowModal, setShowWelcome }) {
             className="text-sm self-start text-white bg-btn-blue font-inter py-1 px-2 md:text-lg lg:text-lg lg:px-8 rounded-md shadow-xl cursor-pointer transition-all hover:opacity-80 active:scale-90 focus:opacity-80 md:rounded-lg"
             onClick={goBack}
           >
-          Back
+          Shuffle
           </button>
           {renderQuestions()}
         </>

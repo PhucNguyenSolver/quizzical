@@ -14,6 +14,10 @@ export function StartModal({ onClose, onSelectParams, setShowWelcome }) {
   })
 
   React.useEffect(() => {
+    handleClose()
+  }
+  , [])
+  React.useEffect(() => {
     async function fetchCategories() {
       const response = await fetch("https://opentdb.com/api_category.php")
       try {
