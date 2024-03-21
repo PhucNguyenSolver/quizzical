@@ -1,3 +1,5 @@
+// Dataset Lịch sử đảng
+
 export const data = [
     {
         question: `Mâu thuẫn vừa cơ bản vừa chủ yếu trong xã hội Việt Nam dưới sự cai trị của thực dân Pháp là:`,
